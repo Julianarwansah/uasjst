@@ -491,9 +491,9 @@
       </div>
       <div class="panel-body">
         <div class="field-group cols3">
-          <div class="field"><label>IPK</label><input id="ipk" type="number" step="0.01" value="3.8"></div>
-          <div class="field"><label>Prestasi</label><input id="prestasi" type="number" step="0.1" value="8"></div>
-          <div class="field"><label>Target (T)</label><input id="target" type="number" step="0.1" value="1.0"></div>
+          <div class="field"><label>IPK</label><input id="ipk" type="number" step="0.01" value=""></div>
+          <div class="field"><label>Prestasi</label><input id="prestasi" type="number" step="0.1" value=""></div>
+          <div class="field"><label>Target (T)</label><input id="target" type="number" step="0.1" value=""></div>
         </div>
         <div class="divider"></div>
         <p style="font-size:12px;color:var(--text-3);margin-bottom:8px;">Rentang Min–Max</p>
@@ -501,15 +501,15 @@
           <div class="field">
             <label>IPK (min – max)</label>
             <div class="range-pair">
-              <input id="ipk_min" type="number" value="0" placeholder="min">
-              <input id="ipk_max" type="number" value="4" placeholder="max">
+              <input id="ipk_min" type="number" value="" placeholder="min">
+              <input id="ipk_max" type="number" value="" placeholder="max">
             </div>
           </div>
           <div class="field">
             <label>Prestasi (min – max)</label>
             <div class="range-pair">
-              <input id="prs_min" type="number" value="0" placeholder="min">
-              <input id="prs_max" type="number" value="10" placeholder="max">
+              <input id="prs_min" type="number" value="" placeholder="min">
+              <input id="prs_max" type="number" value="" placeholder="max">
             </div>
           </div>
         </div>
@@ -524,8 +524,8 @@
       </div>
       <div class="panel-body">
         <div class="field-group cols2">
-          <div class="field"><label>IPK Uji</label><input id="ipk_uji" type="number" step="0.01" value="3.6"></div>
-          <div class="field"><label>Prestasi Uji</label><input id="prs_uji" type="number" step="0.1" value="7"></div>
+          <div class="field"><label>IPK Uji</label><input id="ipk_uji" type="number" step="0.01" value=""></div>
+          <div class="field"><label>Prestasi Uji</label><input id="prs_uji" type="number" step="0.1" value=""></div>
         </div>
       </div>
     </div>
@@ -538,8 +538,8 @@
       </div>
       <div class="panel-body">
         <div class="field-group cols2">
-          <div class="field"><label>α — Kohonen</label><input id="alpha" type="number" step="0.01" value="0.5"></div>
-          <div class="field"><label>β — Grossberg</label><input id="beta" type="number" step="0.01" value="0.4"></div>
+          <div class="field"><label>α — Kohonen</label><input id="alpha" type="number" step="0.01" value=""></div>
+          <div class="field"><label>β — Grossberg</label><input id="beta" type="number" step="0.01" value=""></div>
         </div>
       </div>
     </div>
@@ -564,13 +564,13 @@
           </tr>
           <tr>
             <td>K1</td>
-            <td><input id="k1w1" type="number" step="0.01" value="0.8"></td>
-            <td><input id="k1w2" type="number" step="0.01" value="0.7"></td>
+            <td><input id="k1w1" type="number" step="0.01" value=""></td>
+            <td><input id="k1w2" type="number" step="0.01" value=""></td>
           </tr>
           <tr>
             <td>K2</td>
-            <td><input id="k2w1" type="number" step="0.01" value="0.3"></td>
-            <td><input id="k2w2" type="number" step="0.01" value="0.4"></td>
+            <td><input id="k2w1" type="number" step="0.01" value=""></td>
+            <td><input id="k2w2" type="number" step="0.01" value=""></td>
           </tr>
         </table>
       </div>
@@ -587,11 +587,11 @@
           <tr><th>Neuron</th><th>V</th></tr>
           <tr>
             <td>K1</td>
-            <td><input id="vk1" type="number" step="0.01" value="0.7"></td>
+            <td><input id="vk1" type="number" step="0.01" value=""></td>
           </tr>
           <tr>
             <td>K2</td>
-            <td><input id="vk2" type="number" step="0.01" value="0.2"></td>
+            <td><input id="vk2" type="number" step="0.01" value=""></td>
           </tr>
         </table>
       </div>
@@ -772,12 +772,12 @@ function calculate(){
 
 function resetAll(){
   const defaults = {
-    ipk:3.8,prestasi:8,target:1.0,
-    ipk_min:0,ipk_max:4,prs_min:0,prs_max:10,
-    k1w1:0.8,k1w2:0.7,k2w1:0.3,k2w2:0.4,
-    vk1:0.7,vk2:0.2,
-    alpha:0.5,beta:0.4,
-    ipk_uji:3.6,prs_uji:7
+    ipk:'',prestasi:'',target:'',
+    ipk_min:'',ipk_max:'',prs_min:'',prs_max:'',
+    k1w1:'',k1w2:'',k2w1:'',k2w2:'',
+    vk1:'',vk2:'',
+    alpha:'',beta:'',
+    ipk_uji:'',prs_uji:''
   };
   for(const [k,v] of Object.entries(defaults))
     document.getElementById(k).value = v;
