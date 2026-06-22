@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JST Calculator – Kumpulan Kalkulator Jaringan Saraf Tiruan</title>
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE9;
+    --border: #E2DED6;
+    --accent: #2563EB;
+    --accent-light: #EFF6FF;
+    --accent-text: #1D4ED8;
+    --success: #166534;
+    --success-bg: #DCFCE7;
+    --warn: #92400E;
+    --warn-bg: #FEF3C7;
+    --text: #1A1917;
+    --text-2: #6B6860;
+    --text-3: #9C9A95;
+    --mono: 'Courier New', monospace;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .logo-mark {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header p { font-size: 13px; color: var(--text-2); margin-top: 1px; }
+
+  .hero {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 1.5rem;
+    text-align: center;
+  }
+  .hero h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  .hero p {
+    font-size: 15px;
+    color: var(--text-2);
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  .badge-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+  .pill::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .container {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  /* ── Responsive ─────────────────────────── */
+  @media(max-width:720px){
+    .container{grid-template-columns:1fr;padding:1rem;gap:1rem;}
+    .container .card{order:initial;}
+    .container .card:nth-child(2){order:initial;}
+    header{padding:0.85rem 1rem;gap:10px;}
+    .logo-mark{width:36px;height:36px;font-size:12px;}
+    header h1{font-size:15px;}
+    header p{font-size:11px;}
+    .hero{padding:1.75rem 1rem 1rem;}
+    .hero h2{font-size:20px;line-height:1.3;}
+    .hero p{font-size:13.5px;}
+    .card{padding:1.25rem;}
+    .card-icon{width:44px;height:44px;font-size:18px;margin-bottom:0.85rem;}
+    .card h3{font-size:16px;}
+    .card p.desc{font-size:13px;}
+    .feature-list li{font-size:12.5px;padding:3px 0;}
+    .card-cta{font-size:12.5px;padding-top:0.85rem;}
+    .info{padding:0 1rem 2rem;}
+    .info-box{padding:0.85rem 1rem;font-size:12.5px;}
+    footer{padding:1.25rem 1rem;font-size:11px;}
+  }
+  @media(max-width:380px){
+    .badge-row{gap:6px;}
+    .pill{font-size:11px;padding:4px 9px;}
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.08);
+    border-color: var(--accent);
+  }
+  .card-icon {
+    width: 52px; height: 52px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1.1rem;
+    letter-spacing: -1px;
+  }
+  .card-icon.lvq { background: var(--accent); }
+  .card-icon.kg  { background: #7C3AED; }
+
+  .card-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent-text);
+    background: var(--accent-light);
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 0.6rem;
+    align-self: flex-start;
+  }
+  .card h3 {
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.01em;
+  }
+  .card p.desc {
+    font-size: 14px;
+    color: var(--text-2);
+    margin-bottom: 1.1rem;
+    line-height: 1.55;
+  }
+  .feature-list {
+    list-style: none;
+    margin-bottom: 1.25rem;
+  }
+  .feature-list li {
+    font-size: 13px;
+    color: var(--text-2);
+    padding: 4px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .feature-list li::before {
+    content: '✓';
+    color: var(--success);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .card-cta {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-text);
+  }
+  .arrow {
+    transition: transform 0.18s;
+    font-size: 16px;
+  }
+  .card:hover .arrow {
+    transform: translateX(4px);
+  }
+
+  .info {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+  }
+  .info-box {
+    background: var(--warn-bg);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    font-size: 13px;
+    color: var(--warn);
+    line-height: 1.6;
+  }
+  .info-box strong { color: var(--text); }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 12px;
+    color: var(--text-3);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    margin-top: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">JST</div>
+  <div>
+    <h1>JST Calculator</h1>
+    <p>Kumpulan kalkulator jaringan saraf tiruan untuk tugas & pembelajaran</p>
+  </div>
+</header>
+
+<div class="hero">
+  <h2>Pilih Metode Jaringan Saraf Tiruan</h2>
+  <p>Dua kalkulator interaktif untuk membantu memahami dan menyelesaikan perhitungan klasifikasi menggunakan algoritma JST.</p>
+  <div class="badge-row">
+    <span class="pill">Interaktif</span>
+    <span class="pill">Langkah demi langkah</span>
+    <span class="pill">Tanpa backend</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <a class="card" href="lvqkreditbank.html">
+    <div class="card-icon lvq">LVQ</div>
+    <span class="card-tag">Learning Vector Quantization</span>
+    <h3>LVQ – Klasifikasi Kredit Bank</h3>
+    <p class="desc">Menentukan kelayakan kredit calon nasabah berdasarkan pendapatan dan lama bekerja menggunakan metode LVQ.</p>
+    <ul class="feature-list">
+      <li>Input data training & bobot neuron awal</li>
+      <li>Normalisasi Min-Max otomatis</li>
+      <li>Hitung jarak Euclidean &amp; update bobot adaptif</li>
+      <li>Penjelasan tanda + (didekatkan) dan − (dijauhkan)</li>
+    </ul>
+    <div class="card-cta">
+      <span>Buka kalkulator LVQ</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="seleksipenerimaanbeasiswa.html">
+    <div class="card-icon kg">KG</div>
+    <span class="card-tag">Kohonen–Grossberg</span>
+    <h3>Seleksi Penerimaan Beasiswa</h3>
+    <p class="desc">Menentukan kelulusan penerima beasiswa berdasarkan IPK dan prestasi dengan jaringan Kohonen–Grossberg.</p>
+    <ul class="feature-list">
+      <li>Bobot Kohonen &amp; Grossberg terpisah</li>
+      <li>Learning rate α (Kohonen) dan β (Grossberg)</li>
+      <li>Update bobot pemenang &amp; klasifikasi data uji</li>
+      <li>Penentuan lulus / tidak lulus otomatis</li>
+    </ul>
+    <div class="card-cta">
+      <span>Buka kalkulator Kohonen–Grossberg</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+</div>
+
+<div class="info">
+  <div class="info-box">
+    <strong>Catatan:</strong> Kedua kalkulator di atas berjalan murni di sisi klien (client-side) menggunakan HTML, CSS, dan JavaScript — tidak ada data yang dikirim ke server. Nilai dapat diubah-ubah untuk eksplorasi perhitungan.
+  </div>
+</div>
+
+<footer>JST Calculator · Kumpulan kalkulator jaringan saraf tiruan untuk tugas & pembelajaran</footer>
+
+</body>
+</html>

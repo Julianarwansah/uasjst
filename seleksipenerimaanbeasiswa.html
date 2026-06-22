@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Kohonen–Grossberg</title>
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE9;
+    --border: #E2DED6;
+    --accent: #2563EB;
+    --accent-light: #EFF6FF;
+    --accent-text: #1D4ED8;
+    --success: #166534;
+    --success-bg: #DCFCE7;
+    --danger: #991B1B;
+    --danger-bg: #FEE2E2;
+    --text: #1A1917;
+    --text-2: #6B6860;
+    --text-3: #9C9A95;
+    --mono: 'Courier New', monospace;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  header p {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 1px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  /* ── Responsive ─────────────────────────── */
+  @media (max-width: 900px) {
+    .container { grid-template-columns: 1fr; padding: 1.25rem 1rem 3rem; gap: 1.1rem; }
+    header { padding: 0.9rem 1rem; gap: 10px; }
+    .logo-mark { width: 36px; height: 36px; font-size: 14px; }
+    header h1 { font-size: 15px; }
+    header p { font-size: 11px; display: none; }
+  }
+  @media (max-width: 720px) {
+    body { font-size: 14px; }
+    .container { grid-template-columns: 1fr; padding: 1rem 0.85rem 2.5rem; gap: 0.9rem; }
+    header { padding: 0.85rem; gap: 9px; }
+    .logo-mark { width: 32px; height: 32px; font-size: 13px; }
+    header h1 { font-size: 14px; }
+    header p { font-size: 10.5px; display: none; }
+
+    .panel { border-radius: 8px; }
+    .panel-head { padding: 0.7rem 0.85rem 0.6rem; gap: 7px; }
+    .panel-icon { width: 24px; height: 24px; font-size: 12px; }
+    .panel-head h2 { font-size: 13px; }
+    .panel-body { padding: 0.75rem 0.85rem; }
+
+    .field-group { gap: 8px; margin-bottom: 8px; }
+    .field-group.cols2, .field-group.cols3 { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .field label { font-size: 10.5px; margin-bottom: 3px; letter-spacing: 0.04em; }
+    .field input { padding: 9px 9px; font-size: 13.5px; border-radius: 5px; }
+
+    .range-pair { gap: 5px; }
+    .divider { margin: 10px 0; }
+
+    .neuron-table { font-size: 12px; }
+    .neuron-table th { font-size: 10px; }
+    .neuron-table td { padding: 5px 0 0; }
+    .neuron-table td:first-child { width: 40px; font-size: 11.5px; padding-top: 11px; }
+    .neuron-table td + td { padding-left: 6px; }
+    .neuron-table input { width: 100%; }
+
+    .calc-btn { padding: 12px; font-size: 13.5px; border-radius: 7px; }
+    .reset-btn { margin-top: 0.75rem; padding: 10px; font-size: 12.5px; }
+
+    .result-panel { margin-top: 0.5rem; }
+    .steps-wrap { grid-template-columns: 1fr; border-radius: 8px; }
+    .step { padding: 0.85rem 0.95rem; }
+    .step-title { font-size: 12.5px; margin-bottom: 8px; }
+    .step-num { width: 20px; height: 20px; font-size: 10px; margin-right: 5px; }
+
+    .formula { font-size: 12px; padding: 7px 9px; margin: 3px 0; line-height: 1.55; word-wrap: break-word; overflow-wrap: break-word; }
+    .badge-winner { font-size: 12px; padding: 5px 9px; margin-top: 5px; }
+
+    .res-table { font-size: 12px; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .res-table thead, .res-table tbody, .res-table tr { display: table; width: 100%; }
+    .res-table th { font-size: 10px; padding: 4px 6px 4px 0; }
+    .res-table td { padding: 5px 6px 5px 0; }
+
+    .verdict { font-size: 15px; padding: 12px 14px; margin-top: 9px; }
+    .verdict-note { font-size: 12.5px; }
+    .tag-note { font-size: 11.5px; }
+
+    #r_summary { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+    #r_summary > div { padding: 8px 10px !important; border-radius: 7px !important; }
+    #r_summary > div > div:first-child { font-size: 10px !important; }
+    #r_summary > div > div:last-child { font-size: 15px !important; }
+
+    footer { padding: 1.1rem 1rem; font-size: 11px; margin-top: 1.5rem; }
+  }
+  @media (max-width: 420px) {
+    .container { padding: 0.75rem 0.6rem 2rem; }
+    .field-group.cols3 { grid-template-columns: 1fr; }
+    #r_summary { grid-template-columns: 1fr 1fr !important; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .panel-head {
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .panel-head h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .panel-body {
+    padding: 1rem 1.25rem;
+  }
+
+  .field-group {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .field-group.cols2 { grid-template-columns: 1fr 1fr; }
+  .field-group.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+    font-family: var(--mono);
+  }
+
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .range-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .neuron-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .neuron-table th {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 0 6px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .neuron-table td {
+    padding: 6px 0 0;
+    vertical-align: top;
+  }
+
+  .neuron-table td:first-child {
+    width: 52px;
+    font-weight: 600;
+    color: var(--text-2);
+    padding-top: 13px;
+    font-size: 13px;
+  }
+
+  .neuron-table td input {
+    margin: 0;
+  }
+
+  .neuron-table td + td {
+    padding-left: 8px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+  }
+
+  .calc-btn {
+    width: 100%;
+    padding: 11px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.01em;
+  }
+
+  .calc-btn:hover { background: var(--accent-text); }
+  .calc-btn:active { transform: scale(0.985); }
+
+  .result-panel {
+    grid-column: 1 / -1;
+    display: none;
+  }
+
+  .result-panel.show { display: block; }
+
+  .steps {
+    display: grid;
+    gap: 1px;
+    background: var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .step {
+    background: var(--surface);
+    padding: 1rem 1.25rem;
+  }
+
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+
+  .step-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 7px 11px;
+    margin: 4px 0;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .hl { color: var(--accent-text); font-weight: 700; }
+
+  .badge-winner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-light);
+    color: var(--accent-text);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  .res-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  .res-table th {
+    text-align: left;
+    padding: 4px 10px 4px 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .res-table td {
+    padding: 5px 10px 5px 0;
+    border-bottom: 1px solid var(--surface2);
+    color: var(--text);
+  }
+
+  .res-table tr:last-child td { border-bottom: none; }
+
+  .verdict {
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 10px;
+    letter-spacing: 0.01em;
+  }
+
+  .verdict.lulus { background: var(--success-bg); color: var(--success); }
+  .verdict.tidak  { background: var(--danger-bg);  color: var(--danger);  }
+
+  .verdict-note {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  .tag-note {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+
+  .reset-btn {
+    margin-top: 1rem;
+    display: block;
+    width: 100%;
+    padding: 9px;
+    font-size: 13px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .reset-btn:hover { background: var(--surface2); }
+
+  .steps-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .steps-wrap { grid-template-columns: 1fr; }
+    .field-group.cols3 { grid-template-columns: 1fr 1fr; }
+  }
+
+  .step-full { grid-column: 1 / -1; }
+
+  .input-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 12px;
+    color: var(--text-3);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    margin-top: 2rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">KG</div>
+  <div>
+    <h1>Kalkulator Kohonen–Grossberg</h1>
+    <p>Simulasi seleksi beasiswa dengan jaringan saraf tiruan</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- LEFT INPUT COLUMN -->
+  <div class="input-col">
+
+    <!-- Data Mahasiswa -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">📋</div>
+        <h2>Data Mahasiswa</h2>
+      </div>
+      <div class="panel-body">
+        <div class="field-group cols3">
+          <div class="field"><label>IPK</label><input id="ipk" type="number" step="0.01" value="3.8"></div>
+          <div class="field"><label>Prestasi</label><input id="prestasi" type="number" step="0.1" value="8"></div>
+          <div class="field"><label>Target (T)</label><input id="target" type="number" step="0.1" value="1.0"></div>
+        </div>
+        <div class="divider"></div>
+        <p style="font-size:12px;color:var(--text-3);margin-bottom:8px;">Rentang Min–Max</p>
+        <div class="field-group cols2">
+          <div class="field">
+            <label>IPK (min – max)</label>
+            <div class="range-pair">
+              <input id="ipk_min" type="number" value="0" placeholder="min">
+              <input id="ipk_max" type="number" value="4" placeholder="max">
+            </div>
+          </div>
+          <div class="field">
+            <label>Prestasi (min – max)</label>
+            <div class="range-pair">
+              <input id="prs_min" type="number" value="0" placeholder="min">
+              <input id="prs_max" type="number" value="10" placeholder="max">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Uji -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">🔍</div>
+        <h2>Data Uji Baru</h2>
+      </div>
+      <div class="panel-body">
+        <div class="field-group cols2">
+          <div class="field"><label>IPK Uji</label><input id="ipk_uji" type="number" step="0.01" value="3.6"></div>
+          <div class="field"><label>Prestasi Uji</label><input id="prs_uji" type="number" step="0.1" value="7"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Learning Rate -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">⚙️</div>
+        <h2>Learning Rate</h2>
+      </div>
+      <div class="panel-body">
+        <div class="field-group cols2">
+          <div class="field"><label>α — Kohonen</label><input id="alpha" type="number" step="0.01" value="0.5"></div>
+          <div class="field"><label>β — Grossberg</label><input id="beta" type="number" step="0.01" value="0.4"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT INPUT COLUMN -->
+  <div class="input-col">
+
+    <!-- Bobot Kohonen -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">🧠</div>
+        <h2>Bobot Awal Kohonen</h2>
+      </div>
+      <div class="panel-body">
+        <table class="neuron-table">
+          <tr>
+            <th>Neuron</th>
+            <th>W₁</th>
+            <th>W₂</th>
+          </tr>
+          <tr>
+            <td>K1</td>
+            <td><input id="k1w1" type="number" step="0.01" value="0.8"></td>
+            <td><input id="k1w2" type="number" step="0.01" value="0.7"></td>
+          </tr>
+          <tr>
+            <td>K2</td>
+            <td><input id="k2w1" type="number" step="0.01" value="0.3"></td>
+            <td><input id="k2w2" type="number" step="0.01" value="0.4"></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bobot Grossberg -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">📊</div>
+        <h2>Bobot Awal Grossberg</h2>
+      </div>
+      <div class="panel-body">
+        <table class="neuron-table">
+          <tr><th>Neuron</th><th>V</th></tr>
+          <tr>
+            <td>K1</td>
+            <td><input id="vk1" type="number" step="0.01" value="0.7"></td>
+          </tr>
+          <tr>
+            <td>K2</td>
+            <td><input id="vk2" type="number" step="0.01" value="0.2"></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Hitung -->
+    <div class="panel">
+      <div class="panel-body">
+        <button class="calc-btn" onclick="calculate()">Hitung Sekarang</button>
+        <button class="reset-btn" onclick="resetAll()">Reset ke nilai default</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RESULTS -->
+  <div class="result-panel" id="result-panel">
+    <div class="steps-wrap">
+
+      <div class="step step-full" style="background:#F0F4FF;border-bottom:1px solid var(--border)">
+        <div class="step-title" style="color:var(--accent-text)">
+          <span class="step-num">→</span> Ringkasan Hasil
+        </div>
+        <div id="r_summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">1</span> Normalisasi Min-Max</div>
+        <div id="r_norm"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">2</span> Neuron Pemenang (Training)</div>
+        <div id="r_winner"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">3</span> Update Bobot Kohonen</div>
+        <div id="r_kohonen"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">4</span> Update Bobot Grossberg</div>
+        <div id="r_grossberg"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">5</span> Normalisasi Data Uji</div>
+        <div id="r_testnorm"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">6–7</span> Jarak Data Uji ke Neuron</div>
+        <div id="r_testdist"></div>
+      </div>
+
+      <div class="step step-full">
+        <div class="step-title"><span class="step-num">8</span> Klasifikasi Akhir</div>
+        <div id="r_verdict"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<footer>Kalkulator Kohonen–Grossberg · Metode Jaringan Saraf Tiruan · Seleksi Beasiswa</footer>
+
+<script>
+function f(n, d=3){ return parseFloat(n.toFixed(d)); }
+
+function card(label, value, color){
+  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+    <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px">${label}</div>
+    <div style="font-size:18px;font-weight:700;color:${color||'var(--text)'};">${value}</div>
+  </div>`;
+}
+
+function formula(html){ return `<div class="formula">${html}</div>`; }
+
+function calculate(){
+  const get = id => parseFloat(document.getElementById(id).value)||0;
+
+  const ipk=get('ipk'), prs=get('prestasi'), T=get('target');
+  const ipk_min=get('ipk_min'), ipk_max=get('ipk_max');
+  const prs_min=get('prs_min'), prs_max=get('prs_max');
+  const k1w1=get('k1w1'), k1w2=get('k1w2');
+  const k2w1=get('k2w1'), k2w2=get('k2w2');
+  const vk1=get('vk1'), vk2=get('vk2');
+  const alpha=get('alpha'), beta=get('beta');
+  const ipk_uji=get('ipk_uji'), prs_uji=get('prs_uji');
+
+  // Step 1
+  const x1 = (ipk - ipk_min)/(ipk_max - ipk_min);
+  const x2 = (prs - prs_min)/(prs_max - prs_min);
+  document.getElementById('r_norm').innerHTML =
+    formula(`IPK: (${ipk} − ${ipk_min}) / (${ipk_max} − ${ipk_min}) = <span class="hl">${f(x1)}</span>`) +
+    formula(`Prestasi: (${prs} − ${prs_min}) / (${prs_max} − ${prs_min}) = <span class="hl">${f(x2)}</span>`) +
+    formula(`D1 = (<span class="hl">${f(x1)}, ${f(x2)}</span>)`);
+
+  // Step 2
+  const d1 = Math.sqrt((x1-k1w1)**2 + (x2-k1w2)**2);
+  const d2 = Math.sqrt((x1-k2w1)**2 + (x2-k2w2)**2);
+  const winnerK = d1 <= d2 ? 'K1' : 'K2';
+  const winW1 = winnerK==='K1' ? k1w1 : k2w1;
+  const winW2 = winnerK==='K1' ? k1w2 : k2w2;
+  const winV  = winnerK==='K1' ? vk1 : vk2;
+  const losV  = winnerK==='K1' ? vk2 : vk1;
+
+  document.getElementById('r_winner').innerHTML =
+    formula(`d(K1) = √((${f(x1)}−${k1w1})² + (${f(x2)}−${k1w2})²) = <span class="hl">${f(d1)}</span>`) +
+    formula(`d(K2) = √((${f(x1)}−${k2w1})² + (${f(x2)}−${k2w2})²) = <span class="hl">${f(d2)}</span>`) +
+    `<div class="badge-winner">🏆 Pemenang: ${winnerK} &nbsp;·&nbsp; d = ${f(Math.min(d1,d2))}</div>`;
+
+  // Step 3
+  const nw1 = winW1 + alpha*(x1 - winW1);
+  const nw2 = winW2 + alpha*(x2 - winW2);
+  document.getElementById('r_kohonen').innerHTML =
+    formula(`W₁ = ${winW1} + ${alpha} × (${f(x1)} − ${winW1}) = <span class="hl">${f(nw1)}</span>`) +
+    formula(`W₂ = ${winW2} + ${alpha} × (${f(x2)} − ${winW2}) = <span class="hl">${f(nw2)}</span>`) +
+    formula(`${winnerK} baru = (<span class="hl">${f(nw1)}, ${f(nw2)}</span>)`);
+
+  // Step 4
+  const nV = winV + beta*(T - winV);
+  document.getElementById('r_grossberg').innerHTML =
+    formula(`V = ${winV} + ${beta} × (${T} − ${winV}) = <span class="hl">${f(nV)}</span>`) +
+    `<table class="res-table" style="margin-top:8px">
+      <tr><th>Neuron</th><th>V Lama</th><th>V Baru</th></tr>
+      <tr><td>${winnerK}</td><td>${winV}</td><td class="hl">${f(nV)}</td></tr>
+      <tr><td>${winnerK==='K1'?'K2':'K1'}</td><td>${f(losV)}</td><td style="color:var(--text-3)">${f(losV)} (tidak diupdate)</td></tr>
+    </table>`;
+
+  // Step 5 — normalize test data
+  const xu1 = (ipk_uji - ipk_min)/(ipk_max - ipk_min);
+  const xu2 = (prs_uji - prs_min)/(prs_max - prs_min);
+  document.getElementById('r_testnorm').innerHTML =
+    formula(`IPK: ${ipk_uji} / ${ipk_max - ipk_min} = <span class="hl">${f(xu1)}</span>`) +
+    formula(`Prestasi: ${prs_uji} / ${prs_max - prs_min} = <span class="hl">${f(xu2)}</span>`) +
+    formula(`Data uji = (<span class="hl">${f(xu1)}, ${f(xu2)}</span>)`);
+
+  // Step 6-7 — test distances (use updated weights for winner)
+  let tw1_k1,tw2_k1,tw1_k2,tw2_k2;
+  if(winnerK==='K1'){tw1_k1=nw1;tw2_k1=nw2;tw1_k2=k2w1;tw2_k2=k2w2;}
+  else{tw1_k1=k1w1;tw2_k1=k1w2;tw1_k2=nw1;tw2_k2=nw2;}
+
+  const td1 = Math.sqrt((xu1-tw1_k1)**2 + (xu2-tw2_k1)**2);
+  const td2 = Math.sqrt((xu1-tw1_k2)**2 + (xu2-tw2_k2)**2);
+  const tWinner = td1 <= td2 ? 'K1' : 'K2';
+  const outputV = td1 <= td2 ? (winnerK==='K1'?nV:vk1) : (winnerK==='K2'?nV:vk2);
+
+  document.getElementById('r_testdist').innerHTML =
+    formula(`d(K1) = √((${f(xu1)}−${f(tw1_k1)})² + (${f(xu2)}−${f(tw2_k1)})²) = <span class="hl">${f(td1)}</span>`) +
+    formula(`d(K2) = √((${f(xu1)}−${f(tw1_k2)})² + (${f(xu2)}−${f(tw2_k2)})²) = <span class="hl">${f(td2)}</span>`) +
+    `<div class="badge-winner">🏆 Pemenang uji: ${tWinner} &nbsp;·&nbsp; d = ${f(Math.min(td1,td2))}</div>`;
+
+  // Step 8 — verdict
+  const isLulus = outputV >= 0.5;
+  document.getElementById('r_verdict').innerHTML =
+    formula(`Output V (${tWinner}) = <span class="hl">${f(outputV)}</span>`) +
+    `<div class="verdict ${isLulus?'lulus':'tidak'}" style="margin-top:12px">
+      ${isLulus ? '✓ Prediksi: LULUS BEASISWA' : '✗ Prediksi: TIDAK LULUS BEASISWA'}
+    </div>
+    <p class="verdict-note">Nilai output <strong>${f(outputV)}</strong> mendekati <strong>${isLulus?'1 (positif)':'0 (negatif)'}</strong> → klasifikasi <strong>${isLulus?'lulus':'tidak lulus'}</strong></p>`;
+
+  // Summary cards
+  document.getElementById('r_summary').innerHTML =
+    card('Normalisasi IPK', f(x1)) +
+    card('Normalisasi Prestasi', f(x2)) +
+    card('Neuron Pemenang', winnerK, 'var(--accent-text)') +
+    card('V Baru', f(nV)) +
+    card('Pemenang Uji', tWinner, 'var(--accent-text)') +
+    card('Prediksi', isLulus?'Lulus ✓':'Tidak Lulus ✗', isLulus?'var(--success)':'var(--danger)');
+
+  const rp = document.getElementById('result-panel');
+  rp.classList.add('show');
+  rp.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function resetAll(){
+  const defaults = {
+    ipk:3.8,prestasi:8,target:1.0,
+    ipk_min:0,ipk_max:4,prs_min:0,prs_max:10,
+    k1w1:0.8,k1w2:0.7,k2w1:0.3,k2w2:0.4,
+    vk1:0.7,vk2:0.2,
+    alpha:0.5,beta:0.4,
+    ipk_uji:3.6,prs_uji:7
+  };
+  for(const [k,v] of Object.entries(defaults))
+    document.getElementById(k).value = v;
+  document.getElementById('result-panel').classList.remove('show');
+}
+</script>
+</body>
+</html>

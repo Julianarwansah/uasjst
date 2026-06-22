@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator LVQ – Klasifikasi Kredit Bank</title>
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE9;
+    --border: #E2DED6;
+    --accent: #2563EB;
+    --accent-light: #EFF6FF;
+    --accent-text: #1D4ED8;
+    --success: #166534;
+    --success-bg: #DCFCE7;
+    --danger: #991B1B;
+    --danger-bg: #FEE2E2;
+    --warn: #92400E;
+    --warn-bg: #FEF3C7;
+    --text: #1A1917;
+    --text-2: #6B6860;
+    --text-3: #9C9A95;
+    --mono: 'Courier New', monospace;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1.25rem 2rem; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+  .logo-mark { width: 36px; height: 36px; background: var(--accent); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  header h1 { font-size: 17px; font-weight: 600; }
+  header p { font-size: 13px; color: var(--text-2); margin-top: 1px; }
+
+  .container { max-width: 1040px; margin: 0 auto; padding: 2rem 1.5rem 4rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+
+  /* ── Responsive ─────────────────────────── */
+  @media(max-width:900px){
+    .container{grid-template-columns:1fr;padding:1.25rem 1rem 3rem;gap:1.1rem;}
+    header{padding:0.9rem 1rem;gap:10px;}
+    .logo-mark{width:36px;height:36px;font-size:12px;}
+    header h1{font-size:15px;}
+    header p{font-size:11px;display:none;}
+  }
+  @media(max-width:720px){
+    body{font-size:14px;}
+    .container{grid-template-columns:1fr;padding:1rem 0.85rem 2.5rem;gap:0.9rem;}
+    header{padding:0.85rem;gap:9px;}
+    .logo-mark{width:32px;height:32px;font-size:11px;}
+    header h1{font-size:14px;}
+    header p{font-size:10.5px;display:none;}
+
+    .panel{border-radius:8px;}
+    .panel-head{padding:0.7rem 0.85rem 0.6rem;gap:7px;}
+    .panel-icon{width:24px;height:24px;font-size:12px;}
+    .panel-head h2{font-size:13px;}
+    .panel-body{padding:0.75rem 0.85rem;}
+
+    .field{margin-bottom:8px;}
+    .field label{font-size:10px;margin-bottom:3px;letter-spacing:0.04em;}
+    .field input, .field select{padding:9px 9px;font-size:13.5px;border-radius:5px;}
+
+    .cols2, .cols3{grid-template-columns:1fr 1fr;gap:8px;}
+    .cols3{grid-template-columns:1fr 1fr 1fr;}
+    .divider{margin:10px 0;}
+
+    .data-table{font-size:12px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .data-table thead, .data-table tbody, .data-table tr{display:table;width:100%;table-layout:fixed;}
+    .data-table th{font-size:10px;padding:4px 4px 5px;}
+    .data-table td{padding:4px 3px;}
+    .data-table td input, .data-table td select{padding:6px 5px;font-size:12px;width:100%;}
+    .data-table td:first-child{width:32px;font-size:11.5px;}
+
+    .btn-add{font-size:11.5px;padding:7px 10px;width:100%;margin-top:8px;}
+    .btn-del{font-size:13px;padding:3px 5px;}
+
+    .calc-btn{padding:12px;font-size:13.5px;border-radius:7px;}
+    .reset-btn{margin-top:7px;padding:10px;font-size:12.5px;}
+
+    .result-panel{margin-top:0.5rem;}
+    .steps-wrap{grid-template-columns:1fr;border-radius:8px;}
+    .step{padding:0.85rem 0.95rem;}
+    .step-title{font-size:12.5px;margin-bottom:8px;}
+    .step-num{width:20px;height:20px;font-size:10px;margin-right:5px;}
+
+    .formula{font-size:12px;padding:7px 9px;margin:3px 0;line-height:1.55;word-wrap:break-word;overflow-wrap:break-word;}
+    .badge{font-size:12px;padding:5px 9px;margin-top:5px;}
+
+    .res-table{font-size:12px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .res-table thead, .res-table tbody, .res-table tr{display:table;width:100%;}
+    .res-table th{font-size:10px;padding:4px 6px 4px 0;}
+    .res-table td{padding:5px 6px 5px 0;}
+
+    .verdict{font-size:14px;padding:12px 14px;margin-top:8px;}
+    .info-box{font-size:12px;padding:8px 10px;line-height:1.5;}
+
+    .summary-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .sum-card{padding:8px 10px;border-radius:7px;}
+    .sum-card .lbl{font-size:10px;}
+    .sum-card .val{font-size:15px;}
+
+    footer{padding:1.1rem 1rem;font-size:11px;margin-top:1.5rem;}
+  }
+  @media(max-width:420px){
+    .container{padding:0.75rem 0.6rem 2rem;}
+    .cols3{grid-template-columns:1fr;}
+    .summary-grid{grid-template-columns:1fr 1fr;}
+  }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-head { padding: 0.9rem 1.25rem 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .panel-icon { width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .panel-head h2 { font-size: 14px; font-weight: 600; }
+  .panel-body { padding: 1rem 1.25rem; }
+
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .field input, .field select { width: 100%; padding: 7px 10px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-family: var(--mono); transition: border-color 0.15s; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cols3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 6px; }
+  .data-table th { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 6px 6px; border-bottom: 1px solid var(--border); text-align: left; }
+  .data-table td { padding: 5px 6px; vertical-align: middle; }
+  .data-table td input { padding: 5px 8px; font-size: 13px; }
+  .data-table td select { padding: 5px 6px; font-size: 13px; }
+  .data-table td:first-child { font-weight: 600; color: var(--text-2); font-size: 13px; width: 36px; }
+  .data-table tbody tr:nth-child(even) td { background: #FAFAF8; }
+
+  .btn-add { font-size: 12px; padding: 5px 12px; background: none; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text-2); cursor: pointer; margin-top: 6px; }
+  .btn-add:hover { background: var(--surface2); }
+  .btn-del { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 14px; padding: 2px 4px; border-radius: 4px; }
+  .btn-del:hover { color: var(--danger); background: var(--danger-bg); }
+
+  .calc-btn { width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; }
+  .calc-btn:hover { background: var(--accent-text); }
+  .calc-btn:active { transform: scale(0.985); }
+  .reset-btn { margin-top: 8px; display: block; width: 100%; padding: 9px; font-size: 13px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); cursor: pointer; }
+  .reset-btn:hover { background: var(--surface2); }
+
+  .result-panel { grid-column: 1 / -1; display: none; }
+  .result-panel.show { display: block; }
+
+  .steps-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+  @media(max-width:600px){ .steps-wrap{grid-template-columns:1fr;} }
+
+  .step { background: var(--surface); padding: 1rem 1.25rem; }
+  .step-full { grid-column: 1 / -1; }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: var(--accent); color: #fff; border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 6px; flex-shrink: 0; }
+  .step-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; margin-bottom: 10px; }
+
+  .formula { font-family: var(--mono); font-size: 13px; background: var(--surface2); border-radius: var(--radius-sm); padding: 7px 11px; margin: 4px 0; color: var(--text); line-height: 1.6; }
+  .hl { color: var(--accent-text); font-weight: 700; }
+  .hl-g { color: var(--success); font-weight: 700; }
+  .hl-r { color: var(--danger); font-weight: 700; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-sm); padding: 5px 10px; font-size: 13px; font-weight: 600; margin-top: 6px; }
+  .badge-blue { background: var(--accent-light); color: var(--accent-text); }
+  .badge-green { background: var(--success-bg); color: var(--success); }
+  .badge-red { background: var(--danger-bg); color: var(--danger); }
+  .badge-warn { background: var(--warn-bg); color: var(--warn); }
+
+  .res-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .res-table th { text-align: left; padding: 4px 10px 4px 0; font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  .res-table td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--surface2); }
+  .res-table tr:last-child td { border-bottom: none; }
+
+  .verdict { padding: 14px 18px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; text-align: center; margin-top: 10px; }
+  .verdict.a { background: var(--success-bg); color: var(--success); }
+  .verdict.b { background: var(--danger-bg); color: var(--danger); }
+
+  .info-box { font-size: 13px; background: var(--warn-bg); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--warn); margin-top: 8px; line-height: 1.5; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; }
+  .sum-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .sum-card .lbl { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+  .sum-card .val { font-size: 18px; font-weight: 700; }
+
+  footer { text-align: center; padding: 1.5rem; font-size: 12px; color: var(--text-3); border-top: 1px solid var(--border); background: var(--surface); margin-top: 2rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">LVQ</div>
+  <div>
+    <h1>Kalkulator LVQ – Klasifikasi Kredit Bank</h1>
+    <p>Learning Vector Quantization · Normalisasi Min-Max · Update Bobot Adaptif</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- LEFT: Training Data + Query -->
+  <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">📋</div>
+        <h2>Data Training</h2>
+      </div>
+      <div class="panel-body">
+        <p style="font-size:12px;color:var(--text-3);margin-bottom:10px">x₁ = Pendapatan (Juta Rp) &nbsp;·&nbsp; x₂ = Lama Bekerja (Tahun)</p>
+        <table class="data-table" id="train-table">
+          <thead><tr><th>#</th><th>x₁ Pendapatan</th><th>x₂ Lama Kerja</th><th>Kelas</th><th></th></tr></thead>
+          <tbody id="train-body"></tbody>
+        </table>
+        <button class="btn-add" onclick="addRow()">+ Tambah data</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">🔍</div>
+        <h2>Data yang Diuji</h2>
+      </div>
+      <div class="panel-body">
+        <p style="font-size:12px;color:var(--text-3);margin-bottom:10px">Data yang akan diklasifikasikan (D2 di contoh soal)</p>
+        <div class="cols3">
+          <div class="field"><label>x₁ Pendapatan</label><input id="q_x1" type="number" step="0.1" value="12"></div>
+          <div class="field"><label>x₂ Lama Kerja</label><input id="q_x2" type="number" step="0.1" value="8"></div>
+          <div class="field">
+            <label>Kelas Aktual</label>
+            <select id="q_kelas">
+              <option value="A">A (Disetujui)</option>
+              <option value="B">B (Ditolak)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="panel-icon">❓</div><h2>Pertanyaan 5 – Total Iterasi</h2></div>
+      <div class="panel-body">
+        <div class="cols2">
+          <div class="field"><label>Jumlah Data Training</label><input id="q5_data" type="number" value="20"></div>
+          <div class="field"><label>Jumlah Epoch</label><input id="q5_epoch" type="number" value="50"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Neurons + Settings + Button -->
+  <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+    <div class="panel">
+      <div class="panel-head"><div class="panel-icon">🧠</div><h2>Bobot Awal Neuron</h2></div>
+      <div class="panel-body">
+        <table class="data-table" id="neuron-table">
+          <thead><tr><th>#</th><th>W₁</th><th>W₂</th><th>Kelas</th><th></th></tr></thead>
+          <tbody id="neuron-body"></tbody>
+        </table>
+        <button class="btn-add" onclick="addNeuron()">+ Tambah neuron</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="panel-icon">⚙️</div><h2>Parameter</h2></div>
+      <div class="panel-body">
+        <div class="field"><label>Learning Rate (α)</label><input id="alpha" type="number" step="0.01" value="0.3"></div>
+        <p style="font-size:12px;color:var(--text-3);margin-top:4px">Min-Max dihitung otomatis dari seluruh data training.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-body">
+        <button class="calc-btn" onclick="calculate()">Hitung Sekarang</button>
+        <button class="reset-btn" onclick="resetAll()">Reset ke nilai default</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RESULTS -->
+  <div class="result-panel" id="result-panel">
+    <div class="steps-wrap">
+
+      <div class="step step-full" style="background:#F0F4FF;border-bottom:1px solid var(--border)">
+        <div class="step-title" style="color:var(--accent-text)"><span class="step-num">→</span> Ringkasan Hasil</div>
+        <div class="summary-grid" id="r_summary"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">1</span> Nilai Min &amp; Max (dari data training)</div>
+        <div id="r_minmax"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">2</span> Normalisasi Data Uji (Min-Max)</div>
+        <div id="r_norm"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">3</span> Jarak Euclidean ke Tiap Neuron</div>
+        <div id="r_dist"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">4</span> Neuron Pemenang &amp; Kelas</div>
+        <div id="r_winner"></div>
+      </div>
+
+      <div class="step step-full">
+        <div class="step-title"><span class="step-num">5</span> Update Bobot Neuron Pemenang</div>
+        <div id="r_update"></div>
+      </div>
+
+      <div class="step step-full">
+        <div class="step-title"><span class="step-num">6</span> Bobot Baru Setelah Satu Iterasi</div>
+        <div id="r_newweights"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">7</span> Pertanyaan 4 – Kelas Berbeda</div>
+        <div id="r_q4"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="step-num">8</span> Pertanyaan 5 – Total Iterasi</div>
+        <div id="r_q5"></div>
+      </div>
+
+      <div class="step step-full">
+        <div class="step-title"><span class="step-num">✓</span> Hasil Klasifikasi</div>
+        <div id="r_verdict"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<footer>Kalkulator LVQ – Klasifikasi Kelayakan Kredit Bank · Learning Vector Quantization</footer>
+
+<script>
+// ── default data ──────────────────────────────────────────
+const DEFAULT_TRAIN = [
+  {x1:15,x2:10,kelas:'A'},
+  {x1:12,x2:8, kelas:'A'},
+  {x1:5, x2:2, kelas:'B'},
+  {x1:3, x2:1, kelas:'B'},
+];
+const DEFAULT_NEURONS = [
+  {w1:0.70,w2:0.80,kelas:'A'},
+  {w1:0.20,w2:0.10,kelas:'B'},
+];
+
+let trainRows = [];
+let neuronRows = [];
+
+function f(n,d=4){ return parseFloat(n.toFixed(d)); }
+function formula(html){ return `<div class="formula">${html}</div>`; }
+
+// ── render training table ──────────────────────────────────
+function renderTrain(){
+  const tbody = document.getElementById('train-body');
+  tbody.innerHTML = '';
+  trainRows.forEach((r,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>D${i+1}</td>
+      <td><input type="number" step="0.1" value="${r.x1}" onchange="trainRows[${i}].x1=+this.value"></td>
+      <td><input type="number" step="0.1" value="${r.x2}" onchange="trainRows[${i}].x2=+this.value"></td>
+      <td><select onchange="trainRows[${i}].kelas=this.value">
+        <option value="A" ${r.kelas==='A'?'selected':''}>A</option>
+        <option value="B" ${r.kelas==='B'?'selected':''}>B</option>
+      </select></td>
+      <td><button class="btn-del" onclick="trainRows.splice(${i},1);renderTrain()">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function addRow(){
+  trainRows.push({x1:0,x2:0,kelas:'A'});
+  renderTrain();
+}
+
+// ── render neuron table ────────────────────────────────────
+function renderNeurons(){
+  const tbody = document.getElementById('neuron-body');
+  tbody.innerHTML = '';
+  neuronRows.forEach((n,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>N${i+1}</td>
+      <td><input type="number" step="0.01" value="${n.w1}" onchange="neuronRows[${i}].w1=+this.value"></td>
+      <td><input type="number" step="0.01" value="${n.w2}" onchange="neuronRows[${i}].w2=+this.value"></td>
+      <td><select onchange="neuronRows[${i}].kelas=this.value">
+        <option value="A" ${n.kelas==='A'?'selected':''}>A</option>
+        <option value="B" ${n.kelas==='B'?'selected':''}>B</option>
+      </select></td>
+      <td><button class="btn-del" onclick="neuronRows.splice(${i},1);renderNeurons()">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function addNeuron(){
+  neuronRows.push({w1:0.5,w2:0.5,kelas:'A'});
+  renderNeurons();
+}
+
+// ── reset ──────────────────────────────────────────────────
+function resetAll(){
+  trainRows = DEFAULT_TRAIN.map(r=>({...r}));
+  neuronRows = DEFAULT_NEURONS.map(n=>({...n}));
+  renderTrain(); renderNeurons();
+  document.getElementById('q_x1').value = 12;
+  document.getElementById('q_x2').value = 8;
+  document.getElementById('q_kelas').value = 'A';
+  document.getElementById('alpha').value = 0.3;
+  document.getElementById('q5_data').value = 20;
+  document.getElementById('q5_epoch').value = 50;
+  document.getElementById('result-panel').classList.remove('show');
+}
+
+// ── main calculation ───────────────────────────────────────
+function calculate(){
+  const alpha = parseFloat(document.getElementById('alpha').value)||0.3;
+  const qx1   = parseFloat(document.getElementById('q_x1').value)||0;
+  const qx2   = parseFloat(document.getElementById('q_x2').value)||0;
+  const qK    = document.getElementById('q_kelas').value;
+  const q5d   = parseInt(document.getElementById('q5_data').value)||20;
+  const q5e   = parseInt(document.getElementById('q5_epoch').value)||50;
+
+  // Sync input values (in case user typed directly)
+  // (onchange handlers handle it; this is safe)
+
+  if(trainRows.length === 0){ alert('Tambahkan minimal satu data training.'); return; }
+  if(neuronRows.length === 0){ alert('Tambahkan minimal satu neuron.'); return; }
+
+  // ── Step 1: min/max from training data ──
+  const allX1 = trainRows.map(r=>r.x1);
+  const allX2 = trainRows.map(r=>r.x2);
+  const minX1 = Math.min(...allX1), maxX1 = Math.max(...allX1);
+  const minX2 = Math.min(...allX2), maxX2 = Math.max(...allX2);
+
+  document.getElementById('r_minmax').innerHTML =
+    formula(`Pendapatan → X<sub>min</sub> = <span class="hl">${minX1}</span> &nbsp;·&nbsp; X<sub>max</sub> = <span class="hl">${maxX1}</span>`) +
+    formula(`Lama Kerja → X<sub>min</sub> = <span class="hl">${minX2}</span> &nbsp;·&nbsp; X<sub>max</sub> = <span class="hl">${maxX2}</span>`);
+
+  // ── Step 2: normalize query point ──
+  const nx1 = (qx1 - minX1)/(maxX1 - minX1);
+  const nx2 = (qx2 - minX2)/(maxX2 - minX2);
+
+  document.getElementById('r_norm').innerHTML =
+    formula(`x₁ = (${qx1} − ${minX1}) / (${maxX1} − ${minX1}) = ${qx1-minX1} / ${maxX1-minX1} = <span class="hl">${f(nx1,4)}</span>`) +
+    formula(`x₂ = (${qx2} − ${minX2}) / (${maxX2} − ${minX2}) = ${qx2-minX2} / ${maxX2-minX2} = <span class="hl">${f(nx2,4)}</span>`) +
+    formula(`Data uji ternormalisasi = (<span class="hl">${f(nx1,4)}, ${f(nx2,4)}</span>)`);
+
+  // ── Step 3: distances ──
+  const dists = neuronRows.map((n,i)=>{
+    const d = Math.sqrt((nx1-n.w1)**2 + (nx2-n.w2)**2);
+    return {i, d, n};
+  });
+
+  let distHTML = '';
+  dists.forEach((item,i)=>{
+    const {n,d} = item;
+    const t1 = f((nx1-n.w1)**2,6), t2 = f((nx2-n.w2)**2,6);
+    distHTML += formula(`d(N${i+1}) = √((${f(nx1,4)}−${n.w1})² + (${f(nx2,4)}−${n.w2})²)`);
+    distHTML += formula(`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √(${t1} + ${t2}) = √${f(t1+t2,6)} = <span class="hl">${f(d,4)}</span>`);
+  });
+  document.getElementById('r_dist').innerHTML = distHTML;
+
+  // ── Step 4: winner ──
+  dists.sort((a,b)=>a.d-b.d);
+  const winner = dists[0];
+  const winIdx = winner.i;
+  const winN   = winner.n;
+  const sameClass = winN.kelas === qK;
+
+  document.getElementById('r_winner').innerHTML =
+    formula(`Jarak terkecil: d(N${winIdx+1}) = <span class="hl">${f(winner.d,4)}</span>`) +
+    `<div class="badge badge-blue" style="margin-top:8px">🏆 Neuron pemenang: N${winIdx+1} (Kelas ${winN.kelas})</div>` +
+    (sameClass
+      ? `<div class="badge badge-green" style="margin-top:6px">✓ Kelas sama (${winN.kelas}) → bobot didekatkan</div>`
+      : `<div class="badge badge-red" style="margin-top:6px">✗ Kelas berbeda (data: ${qK}, neuron: ${winN.kelas}) → bobot dijauhkan</div>`);
+
+  // ── Step 5: weight update ──
+  const sign = sameClass ? 1 : -1;
+  const nw1_new = winN.w1 + sign*alpha*(nx1 - winN.w1);
+  const nw2_new = winN.w2 + sign*alpha*(nx2 - winN.w2);
+  const ruleLabel = sameClass ? 'didekatkan (+)' : 'dijauhkan (−)';
+  const ruleFormula = sameClass
+    ? `W<sub>baru</sub> = W<sub>lama</sub> + α(X − W<sub>lama</sub>)`
+    : `W<sub>baru</sub> = W<sub>lama</sub> − α(X − W<sub>lama</sub>)`;
+
+  document.getElementById('r_update').innerHTML =
+    `<p style="font-size:13px;color:var(--text-2);margin-bottom:8px">Aturan: <strong>${ruleLabel}</strong></p>` +
+    formula(ruleFormula) +
+    formula(`W₁ = ${winN.w1} ${sign>0?'+':'−'} ${alpha} × (${f(nx1,4)} − ${winN.w1}) = ${winN.w1} ${sign>0?'+':'−'} ${f(Math.abs(alpha*(nx1-winN.w1)),6)} = <span class="hl">${f(nw1_new,4)}</span>`) +
+    formula(`W₂ = ${winN.w2} ${sign>0?'+':'−'} ${alpha} × (${f(nx2,4)} − ${winN.w2}) = ${winN.w2} ${sign>0?'+':'−'} ${f(Math.abs(alpha*(nx2-winN.w2)),6)} = <span class="hl">${f(nw2_new,4)}</span>`);
+
+  // ── Step 6: new weight table ──
+  let twHTML = `<table class="res-table"><tr><th>Neuron</th><th>W₁ Lama</th><th>W₂ Lama</th><th>W₁ Baru</th><th>W₂ Baru</th><th>Kelas</th></tr>`;
+  neuronRows.forEach((n,i)=>{
+    if(i === winIdx){
+      twHTML += `<tr><td><strong>N${i+1}</strong></td><td>${n.w1}</td><td>${n.w2}</td><td class="hl">${f(nw1_new,4)}</td><td class="hl">${f(nw2_new,4)}</td><td>${n.kelas}</td></tr>`;
+    } else {
+      twHTML += `<tr><td>N${i+1}</td><td>${n.w1}</td><td>${n.w2}</td><td style="color:var(--text-3)">${n.w1}</td><td style="color:var(--text-3)">${n.w2}</td><td>${n.kelas}</td></tr>`;
+    }
+  });
+  twHTML += '</table>';
+  document.getElementById('r_newweights').innerHTML = twHTML;
+
+  // ── Step 7: Q4 explanation ──
+  document.getElementById('r_q4').innerHTML =
+    `<p style="font-size:13px;color:var(--text-2);margin-bottom:8px">Jika neuron pemenang <strong>berbeda kelas</strong> dengan data input:</p>` +
+    formula(`W<sub>baru</sub> = W<sub>lama</sub> <span class="hl-r">−</span> α(X − W<sub>lama</sub>)`) +
+    `<div class="info-box">Bobot <strong>dijauhkan</strong> dari data input agar neuron yang salah kelas tidak semakin mendekati data tersebut. Tanda negatif membalik arah update.</div>`;
+
+  // ── Step 8: Q5 ──
+  const totalIter = q5d * q5e;
+  document.getElementById('r_q5').innerHTML =
+    formula(`Iterasi = Jumlah Data × Jumlah Epoch`) +
+    formula(`= ${q5d} × ${q5e} = <span class="hl">${totalIter.toLocaleString('id-ID')} iterasi</span>`);
+
+  // ── Verdict ──
+  const predClass = winN.kelas;
+  const isA = predClass === 'A';
+  document.getElementById('r_verdict').innerHTML =
+    formula(`Neuron pemenang N${winIdx+1} → Kelas <span class="hl">${predClass}</span>`) +
+    `<div class="verdict ${isA?'a':'b'}" style="margin-top:10px">
+      ${isA ? '✓ KREDIT DISETUJUI (Kelas A)' : '✗ KREDIT DITOLAK (Kelas B)'}
+    </div>
+    <p style="font-size:13px;color:var(--text-2);margin-top:8px;text-align:center">Data uji (${qx1}, ${qx2}) paling dekat ke neuron <strong>N${winIdx+1}</strong> yang berklasifikasi <strong>Kelas ${predClass}</strong></p>`;
+
+  // ── Summary cards ──
+  function sumCard(lbl,val,col){ return `<div class="sum-card"><div class="lbl">${lbl}</div><div class="val" style="color:${col||'var(--text)'}">${val}</div></div>`; }
+  document.getElementById('r_summary').innerHTML =
+    sumCard('Norm. x₁', f(nx1,4)) +
+    sumCard('Norm. x₂', f(nx2,4)) +
+    sumCard('Neuron Pemenang', `N${winIdx+1}`, 'var(--accent-text)') +
+    sumCard('Update Bobot', sameClass?'Didekatkan':'Dijauhkan', sameClass?'var(--success)':'var(--danger)') +
+    sumCard('Total Iterasi', `${totalIter.toLocaleString('id-ID')}`) +
+    sumCard('Prediksi', predClass==='A'?'Disetujui ✓':'Ditolak ✗', predClass==='A'?'var(--success)':'var(--danger)');
+
+  const rp = document.getElementById('result-panel');
+  rp.classList.add('show');
+  rp.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── init ──────────────────────────────────────────────────
+resetAll();
+</script>
+</body>
+</html>
