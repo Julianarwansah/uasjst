@@ -143,17 +143,17 @@
     .verdict-note { font-size: 12.5px; }
     .tag-note { font-size: 11.5px; }
 
-    #r_summary { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
-    #r_summary > div { padding: 8px 10px !important; border-radius: 7px !important; }
-    #r_summary > div > div:first-child { font-size: 10px !important; }
-    #r_summary > div > div:last-child { font-size: 15px !important; }
+    .summary-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .card-sum{padding:8px 10px;border-radius:7px;}
+    .card-lbl{font-size:10px;}
+    .card-val{font-size:15px;}
 
     footer { padding: 1.1rem 1rem; font-size: 11px; margin-top: 1.5rem; }
   }
   @media (max-width: 420px) {
     .container { padding: 0.75rem 0.6rem 2rem; }
     .field-group.cols3 { grid-template-columns: 1fr; }
-    #r_summary { grid-template-columns: 1fr 1fr !important; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
   }
 
   .panel {
@@ -419,6 +419,13 @@
     margin-top: 4px;
   }
 
+  .card-sum { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .card-lbl { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+  .card-val { font-size: 18px; font-weight: 700; }
+
+  .res-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .res-table-wrap .res-table { min-width: 360px; }
+
   .reset-btn {
     margin-top: 1rem;
     display: block;
@@ -444,12 +451,9 @@
     border: 1px solid var(--border);
   }
 
-  @media (max-width: 600px) {
-    .steps-wrap { grid-template-columns: 1fr; }
-    .field-group.cols3 { grid-template-columns: 1fr 1fr; }
-  }
-
   .step-full { grid-column: 1 / -1; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 
   .input-col {
     display: flex;
@@ -615,7 +619,7 @@
         <div class="step-title" style="color:var(--accent-text)">
           <span class="step-num">→</span> Ringkasan Hasil
         </div>
-        <div id="r_summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px"></div>
+        <div id="r_summary" class="summary-grid"></div>
       </div>
 
       <div class="step">
@@ -664,25 +668,48 @@
 function f(n, d=3){ return parseFloat(n.toFixed(d)); }
 
 function card(label, value, color){
-  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
-    <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px">${label}</div>
-    <div style="font-size:18px;font-weight:700;color:${color||'var(--text)'};">${value}</div>
-  </div>`;
+  return `<div class="card-sum"><div class="card-lbl">${label}</div><div class="card-val" style="color:${color||'var(--text)'}">${value}</div></div>`;
 }
 
 function formula(html){ return `<div class="formula">${html}</div>`; }
 
-function calculate(){
-  const get = id => parseFloat(document.getElementById(id).value)||0;
+function num(id){
+  const v = document.getElementById(id).value;
+  if(v === '' || v === null) return null;
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
+}
 
-  const ipk=get('ipk'), prs=get('prestasi'), T=get('target');
-  const ipk_min=get('ipk_min'), ipk_max=get('ipk_max');
-  const prs_min=get('prs_min'), prs_max=get('prs_max');
-  const k1w1=get('k1w1'), k1w2=get('k1w2');
-  const k2w1=get('k2w1'), k2w2=get('k2w2');
-  const vk1=get('vk1'), vk2=get('vk2');
-  const alpha=get('alpha'), beta=get('beta');
-  const ipk_uji=get('ipk_uji'), prs_uji=get('prs_uji');
+function req(val, name){
+  if(val === null){ alert(`Isi nilai ${name} terlebih dahulu.`); throw new Error('empty'); }
+  return val;
+}
+
+function calculate(){
+  let ipk, prs, T, ipk_min, ipk_max, prs_min, prs_max;
+  let k1w1, k1w2, k2w1, k2w2, vk1, vk2, alpha, beta, ipk_uji, prs_uji;
+  try {
+    ipk    = req(num('ipk'),       'IPK');
+    prs    = req(num('prestasi'),  'Prestasi');
+    T      = req(num('target'),    'Target (T)');
+    ipk_min= req(num('ipk_min'),   'IPK min');
+    ipk_max= req(num('ipk_max'),   'IPK max');
+    prs_min= req(num('prs_min'),   'Prestasi min');
+    prs_max= req(num('prs_max'),   'Prestasi max');
+    k1w1   = req(num('k1w1'),      'Bobot K₁ W₁');
+    k1w2   = req(num('k1w2'),      'Bobot K₁ W₂');
+    k2w1   = req(num('k2w1'),      'Bobot K₂ W₁');
+    k2w2   = req(num('k2w2'),      'Bobot K₂ W₂');
+    vk1    = req(num('vk1'),       'V K₁');
+    vk2    = req(num('vk2'),       'V K₂');
+    alpha  = req(num('alpha'),     'α (Kohonen)');
+    beta   = req(num('beta'),      'β (Grossberg)');
+    ipk_uji= req(num('ipk_uji'),   'IPK Uji');
+    prs_uji= req(num('prs_uji'),   'Prestasi Uji');
+  } catch(e){ if(e.message === 'empty') return; throw e; }
+
+  if(ipk_max - ipk_min === 0){ alert('Rentang IPK min–max tidak valid (min dan max tidak boleh sama).'); return; }
+  if(prs_max - prs_min === 0){ alert('Rentang Prestasi min–max tidak valid (min dan max tidak boleh sama).'); return; }
 
   // Step 1
   const x1 = (ipk - ipk_min)/(ipk_max - ipk_min);
@@ -718,18 +745,18 @@ function calculate(){
   const nV = winV + beta*(T - winV);
   document.getElementById('r_grossberg').innerHTML =
     formula(`V = ${winV} + ${beta} × (${T} − ${winV}) = <span class="hl">${f(nV)}</span>`) +
-    `<table class="res-table" style="margin-top:8px">
+    `<div class="res-table-wrap"><table class="res-table" style="margin-top:8px">
       <tr><th>Neuron</th><th>V Lama</th><th>V Baru</th></tr>
       <tr><td>${winnerK}</td><td>${winV}</td><td class="hl">${f(nV)}</td></tr>
       <tr><td>${winnerK==='K1'?'K2':'K1'}</td><td>${f(losV)}</td><td style="color:var(--text-3)">${f(losV)} (tidak diupdate)</td></tr>
-    </table>`;
+    </table></div>`;
 
   // Step 5 — normalize test data
   const xu1 = (ipk_uji - ipk_min)/(ipk_max - ipk_min);
   const xu2 = (prs_uji - prs_min)/(prs_max - prs_min);
   document.getElementById('r_testnorm').innerHTML =
-    formula(`IPK: ${ipk_uji} / ${ipk_max - ipk_min} = <span class="hl">${f(xu1)}</span>`) +
-    formula(`Prestasi: ${prs_uji} / ${prs_max - prs_min} = <span class="hl">${f(xu2)}</span>`) +
+    formula(`IPK: (${ipk_uji} − ${ipk_min}) / (${ipk_max} − ${ipk_min}) = <span class="hl">${f(xu1)}</span>`) +
+    formula(`Prestasi: (${prs_uji} − ${prs_min}) / (${prs_max} − ${prs_min}) = <span class="hl">${f(xu2)}</span>`) +
     formula(`Data uji = (<span class="hl">${f(xu1)}, ${f(xu2)}</span>)`);
 
   // Step 6-7 — test distances (use updated weights for winner)

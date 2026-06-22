@@ -66,12 +66,14 @@
     .cols3{grid-template-columns:1fr 1fr 1fr;}
     .divider{margin:10px 0;}
 
-    .data-table{font-size:12px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    .data-table thead, .data-table tbody, .data-table tr{display:table;width:100%;table-layout:fixed;}
+    .data-table{font-size:12px;}
     .data-table th{font-size:10px;padding:4px 4px 5px;}
     .data-table td{padding:4px 3px;}
-    .data-table td input, .data-table td select{padding:6px 5px;font-size:12px;width:100%;}
+    .data-table td input, .data-table td select{padding:6px 5px;font-size:12px;width:100%;min-width:0;}
     .data-table td:first-child{width:32px;font-size:11.5px;}
+
+    .data-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .data-table-wrap .data-table{min-width:380px;}
 
     .btn-add{font-size:11.5px;padding:7px 10px;width:100%;margin-top:8px;}
     .btn-del{font-size:13px;padding:3px 5px;}
@@ -88,8 +90,7 @@
     .formula{font-size:12px;padding:7px 9px;margin:3px 0;line-height:1.55;word-wrap:break-word;overflow-wrap:break-word;}
     .badge{font-size:12px;padding:5px 9px;margin-top:5px;}
 
-    .res-table{font-size:12px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    .res-table thead, .res-table tbody, .res-table tr{display:table;width:100%;}
+    .res-table{font-size:12px;}
     .res-table th{font-size:10px;padding:4px 6px 4px 0;}
     .res-table td{padding:5px 6px 5px 0;}
 
@@ -147,7 +148,6 @@
   .result-panel.show { display: block; }
 
   .steps-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
-  @media(max-width:600px){ .steps-wrap{grid-template-columns:1fr;} }
 
   .step { background: var(--surface); padding: 1rem 1.25rem; }
   .step-full { grid-column: 1 / -1; }
@@ -169,6 +169,10 @@
   .res-table th { text-align: left; padding: 4px 10px 4px 0; font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
   .res-table td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--surface2); }
   .res-table tr:last-child td { border-bottom: none; }
+
+  .data-table-wrap, .res-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table-wrap .data-table { min-width: 360px; }
+  .res-table-wrap .res-table { min-width: 420px; }
 
   .verdict { padding: 14px 18px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; text-align: center; margin-top: 10px; }
   .verdict.a { background: var(--success-bg); color: var(--success); }
@@ -206,10 +210,10 @@
       </div>
       <div class="panel-body">
         <p style="font-size:12px;color:var(--text-3);margin-bottom:10px">x₁ = Pendapatan (Juta Rp) &nbsp;·&nbsp; x₂ = Lama Bekerja (Tahun)</p>
-        <table class="data-table" id="train-table">
+        <div class="data-table-wrap"><table class="data-table" id="train-table">
           <thead><tr><th>#</th><th>x₁ Pendapatan</th><th>x₂ Lama Kerja</th><th>Kelas</th><th></th></tr></thead>
           <tbody id="train-body"></tbody>
-        </table>
+        </table></div>
         <button class="btn-add" onclick="addRow()">+ Tambah data</button>
       </div>
     </div>
@@ -253,10 +257,10 @@
     <div class="panel">
       <div class="panel-head"><div class="panel-icon">🧠</div><h2>Bobot Awal Neuron</h2></div>
       <div class="panel-body">
-        <table class="data-table" id="neuron-table">
+        <div class="data-table-wrap"><table class="data-table" id="neuron-table">
           <thead><tr><th>#</th><th>W₁</th><th>W₂</th><th>Kelas</th><th></th></tr></thead>
           <tbody id="neuron-body"></tbody>
-        </table>
+        </table></div>
         <button class="btn-add" onclick="addNeuron()">+ Tambah neuron</button>
       </div>
     </div>
@@ -349,6 +353,7 @@ let neuronRows = [];
 
 function f(n,d=4){ return parseFloat(n.toFixed(d)); }
 function formula(html){ return `<div class="formula">${html}</div>`; }
+function parseVal(v){ if(v === '' || v === null || v === undefined) return null; const n = parseFloat(v); return isNaN(n) ? null : n; }
 
 // ── render training table ──────────────────────────────────
 function renderTrain(){
@@ -358,8 +363,8 @@ function renderTrain(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>D${i+1}</td>
-      <td><input type="number" step="0.1" value="${r.x1}" onchange="trainRows[${i}].x1=+this.value"></td>
-      <td><input type="number" step="0.1" value="${r.x2}" onchange="trainRows[${i}].x2=+this.value"></td>
+      <td><input type="number" step="0.1" value="${r.x1 ?? ''}" onchange="trainRows[${i}].x1=parseVal(this.value)"></td>
+      <td><input type="number" step="0.1" value="${r.x2 ?? ''}" onchange="trainRows[${i}].x2=parseVal(this.value)"></td>
       <td><select onchange="trainRows[${i}].kelas=this.value">
         <option value="A" ${r.kelas==='A'?'selected':''}>A</option>
         <option value="B" ${r.kelas==='B'?'selected':''}>B</option>
@@ -370,7 +375,7 @@ function renderTrain(){
 }
 
 function addRow(){
-  trainRows.push({x1:0,x2:0,kelas:'A'});
+  trainRows.push({x1:null,x2:null,kelas:'A'});
   renderTrain();
 }
 
@@ -382,8 +387,8 @@ function renderNeurons(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>N${i+1}</td>
-      <td><input type="number" step="0.01" value="${n.w1}" onchange="neuronRows[${i}].w1=+this.value"></td>
-      <td><input type="number" step="0.01" value="${n.w2}" onchange="neuronRows[${i}].w2=+this.value"></td>
+      <td><input type="number" step="0.01" value="${n.w1 ?? ''}" onchange="neuronRows[${i}].w1=parseVal(this.value)"></td>
+      <td><input type="number" step="0.01" value="${n.w2 ?? ''}" onchange="neuronRows[${i}].w2=parseVal(this.value)"></td>
       <td><select onchange="neuronRows[${i}].kelas=this.value">
         <option value="A" ${n.kelas==='A'?'selected':''}>A</option>
         <option value="B" ${n.kelas==='B'?'selected':''}>B</option>
@@ -394,7 +399,7 @@ function renderNeurons(){
 }
 
 function addNeuron(){
-  neuronRows.push({w1:0,w2:0,kelas:'A'});
+  neuronRows.push({w1:null,w2:null,kelas:'A'});
   renderNeurons();
 }
 
@@ -413,25 +418,38 @@ function resetAll(){
 }
 
 // ── main calculation ───────────────────────────────────────
-function calculate(){
-  const alpha = parseFloat(document.getElementById('alpha').value)||0.3;
-  const qx1   = parseFloat(document.getElementById('q_x1').value)||0;
-  const qx2   = parseFloat(document.getElementById('q_x2').value)||0;
-  const qK    = document.getElementById('q_kelas').value;
-  const q5d   = parseInt(document.getElementById('q5_data').value)||20;
-  const q5e   = parseInt(document.getElementById('q5_epoch').value)||50;
+function num(id){
+  const v = document.getElementById(id).value;
+  if(v === '' || v === null) return null;
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
+}
 
-  // Sync input values (in case user typed directly)
-  // (onchange handlers handle it; this is safe)
+function calculate(){
+  const alpha = num('alpha');
+  const qx1   = num('q_x1');
+  const qx2   = num('q_x2');
+  const qK    = document.getElementById('q_kelas').value;
+  const q5d   = num('q5_data');
+  const q5e   = num('q5_epoch');
 
   if(trainRows.length === 0){ alert('Tambahkan minimal satu data training.'); return; }
   if(neuronRows.length === 0){ alert('Tambahkan minimal satu neuron.'); return; }
+  if(qx1 === null || qx2 === null){ alert('Isi nilai x₁ dan x₂ data uji terlebih dahulu.'); return; }
+  if(alpha === null){ alert('Isi nilai Learning Rate (α) terlebih dahulu.'); return; }
+  if(q5d === null || q5d < 0){ alert('Isi Jumlah Data Training (Q5) dengan bilangan positif.'); return; }
+  if(q5e === null || q5e < 0){ alert('Isi Jumlah Epoch (Q5) dengan bilangan positif.'); return; }
+  if(trainRows.some(r => isNaN(r.x1) || isNaN(r.x2))){ alert('Pastikan semua data training terisi dengan angka valid.'); return; }
+  if(neuronRows.some(n => isNaN(n.w1) || isNaN(n.w2))){ alert('Pastikan semua bobot neuron terisi dengan angka valid.'); return; }
 
   // ── Step 1: min/max from training data ──
   const allX1 = trainRows.map(r=>r.x1);
   const allX2 = trainRows.map(r=>r.x2);
   const minX1 = Math.min(...allX1), maxX1 = Math.max(...allX1);
   const minX2 = Math.min(...allX2), maxX2 = Math.max(...allX2);
+
+  if(maxX1 - minX1 === 0){ alert('Semua nilai Pendapatan (x₁) pada data training identik. Normalisasi tidak bisa dilakukan.'); return; }
+  if(maxX2 - minX2 === 0){ alert('Semua nilai Lama Kerja (x₂) pada data training identik. Normalisasi tidak bisa dilakukan.'); return; }
 
   document.getElementById('r_minmax').innerHTML =
     formula(`Pendapatan → X<sub>min</sub> = <span class="hl">${minX1}</span> &nbsp;·&nbsp; X<sub>max</sub> = <span class="hl">${maxX1}</span>`) +
@@ -487,11 +505,11 @@ function calculate(){
   document.getElementById('r_update').innerHTML =
     `<p style="font-size:13px;color:var(--text-2);margin-bottom:8px">Aturan: <strong>${ruleLabel}</strong></p>` +
     formula(ruleFormula) +
-    formula(`W₁ = ${winN.w1} ${sign>0?'+':'−'} ${alpha} × (${f(nx1,4)} − ${winN.w1}) = ${winN.w1} ${sign>0?'+':'−'} ${f(Math.abs(alpha*(nx1-winN.w1)),6)} = <span class="hl">${f(nw1_new,4)}</span>`) +
-    formula(`W₂ = ${winN.w2} ${sign>0?'+':'−'} ${alpha} × (${f(nx2,4)} − ${winN.w2}) = ${winN.w2} ${sign>0?'+':'−'} ${f(Math.abs(alpha*(nx2-winN.w2)),6)} = <span class="hl">${f(nw2_new,4)}</span>`);
+    formula(`W₁ = ${winN.w1} ${sign>0?'+':'−'} ${alpha} × (${f(nx1,4)} − ${winN.w1}) = <span class="hl">${f(nw1_new,4)}</span>`) +
+    formula(`W₂ = ${winN.w2} ${sign>0?'+':'−'} ${alpha} × (${f(nx2,4)} − ${winN.w2}) = <span class="hl">${f(nw2_new,4)}</span>`);
 
   // ── Step 6: new weight table ──
-  let twHTML = `<table class="res-table"><tr><th>Neuron</th><th>W₁ Lama</th><th>W₂ Lama</th><th>W₁ Baru</th><th>W₂ Baru</th><th>Kelas</th></tr>`;
+  let twHTML = `<div class="res-table-wrap"><table class="res-table"><tr><th>Neuron</th><th>W₁ Lama</th><th>W₂ Lama</th><th>W₁ Baru</th><th>W₂ Baru</th><th>Kelas</th></tr>`;
   neuronRows.forEach((n,i)=>{
     if(i === winIdx){
       twHTML += `<tr><td><strong>N${i+1}</strong></td><td>${n.w1}</td><td>${n.w2}</td><td class="hl">${f(nw1_new,4)}</td><td class="hl">${f(nw2_new,4)}</td><td>${n.kelas}</td></tr>`;
@@ -499,7 +517,7 @@ function calculate(){
       twHTML += `<tr><td>N${i+1}</td><td>${n.w1}</td><td>${n.w2}</td><td style="color:var(--text-3)">${n.w1}</td><td style="color:var(--text-3)">${n.w2}</td><td>${n.kelas}</td></tr>`;
     }
   });
-  twHTML += '</table>';
+  twHTML += '</table></div>';
   document.getElementById('r_newweights').innerHTML = twHTML;
 
   // ── Step 7: Q4 explanation ──
